@@ -1,5 +1,7 @@
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client-py"
+  interface = "asyncio"
+  recursive_type_depth = -1
 }
 
 datasource db {
@@ -18,7 +20,7 @@ model User {
   company  String?
 
   centerlines Centerline[]
-  topcon_runs TopconRun[]
+  // topcon_runs TopconRun[]
 
   @@map("users")
 }
@@ -35,7 +37,7 @@ model Centerline {
   marker_value String
   footprint    Json
 
-  topcon_runs TopconRun[]
+  // topcon_runs TopconRun[]
 
   User   User?   @relation(fields: [userId], references: [id])
   userId String? @db.ObjectId
@@ -43,57 +45,57 @@ model Centerline {
   @@map("centerlines")
 }
 
-// Topcon Volume Calculation
-type TopconKP {
-  beg Float
-  end Float
-  str String
-}
+// // Topcon Volume Calculation
+// type TopconKP {
+//   beg Float
+//   end Float
+//   str String
+// }
 
-type TopconDataPts {
-  num       Float
-  y         Float
-  x         Float
-  z         Float
-  desc      String?
-  geometry  String
-  chainage  Float?
-  depth     Float?
-  slope     Float?
-  width_bot Float?
-  width_top Float?
-  area      Float?
-}
+// type TopconDataPts {
+//   num       Float
+//   y         Float
+//   x         Float
+//   z         Float
+//   desc      String?
+//   geometry  String
+//   chainage  Float?
+//   depth     Float?
+//   slope     Float?
+//   width_bot Float?
+//   width_top Float?
+//   area      Float?
+// }
 
-type TopconDataRng {
-  KP_beg   Float
-  KP_end   Float
-  area_beg Float
-  area_end Float
-  area_avg Float
-  length   Float
-  volume   Float
-}
+// type TopconDataRng {
+//   KP_beg   Float
+//   KP_end   Float
+//   area_beg Float
+//   area_end Float
+//   area_avg Float
+//   length   Float
+//   volume   Float
+// }
 
-model TopconRun {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+// model TopconRun {
+//   id        String   @id @default(auto()) @map("_id") @db.ObjectId
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
 
-  width_bot      Float
-  slope          Float
-  ditch_profile  String?
-  ground_profile Json?
-  total_volume   Float
-  data_pts       TopconDataPts[]
-  data_rng       TopconDataRng[]
-  KP             TopconKP
+//   width_bot      Float
+//   slope          Float
+//   ditch_profile  String?
+//   ground_profile Json?
+//   total_volume   Float
+//   data_pts       TopconDataPts[]
+//   data_rng       TopconDataRng[]
+//   KP             TopconKP
 
-  User   User?   @relation(fields: [userId], references: [id])
-  userId String? @db.ObjectId
+//   User   User?   @relation(fields: [userId], references: [id])
+//   userId String? @db.ObjectId
 
-  Centerline   Centerline? @relation(fields: [centerlineId], references: [id])
-  centerlineId String?     @db.ObjectId
+//   Centerline   Centerline? @relation(fields: [centerlineId], references: [id])
+//   centerlineId String?     @db.ObjectId
 
-  @@map("topcon_runs")
-}
+//   @@map("topcon_runs")
+// }
