@@ -1,18 +1,11 @@
-from fastapi import UploadFile, File, HTTPException, Depends
+from fastapi import UploadFile, File, HTTPException, Depends, APIRouter
 from fastapi.responses import FileResponse
-from fastapi import APIRouter
 
-import json
-import shutil
 import shapefile
 import openpyxl
 import tempfile
-
-from openpyxl import Workbook
-from openpyxl.utils import get_column_letter
-
-from typing import Dict, List
-from pathlib import Path
+import zipfile
+import os
 
 router = APIRouter()
 
@@ -49,10 +42,22 @@ async def json_to_excel(data: dict, fname=Depends(get_temp_dir)):
 @router.post("/shapefile-to-geojson")
 async def shapefile_to_geojson(file: UploadFile = File(...)):
   with tempfile.TemporaryDirectory() as temp_dir:
+    zip_path = os.path.join(temp_dir,file.filename)
+    
+    with open(zip_path,"wb") as f:
+      f.write(await file.read())
+
+    with zipfile.ZipFile(zip_path,"r") as zip_ref:
+      zip_ref.extractall(temp_dir)   
+    
+    files = os.listdir(temp_dir)
+    shp_file = next((f for f in files if f.endswith(".shp")),None)
+
+    if not shp_file:
+      raise HTTPException(status_code=400, detail="Uploaded zip file does not contain a .shp file")
+
     # Save uploaded file to temporary directory
-    file_path = Path(temp_dir) / file.filename
-    with file_path.open("wb") as buffer:
-      shutil.copyfileobj(file.file, buffer)
+    file_path = os.path.join(temp_dir,shp_file)
 
     # Check if the uploaded file is a valid shapefile
     try:
@@ -68,7 +73,4 @@ async def shapefile_to_geojson(file: UploadFile = File(...)):
       atr = dict(zip(fields, sr.record))
       features.append(dict(geometry=geom, properties=atr))
 
-    # Convert features to GeoJSON using the geojson package
-    geojson_data = json.dumps(dict(type="FeatureCollection", features=features))
-
-  return geojson_data
+  return dict(type="FeatureCollection", features=features)
