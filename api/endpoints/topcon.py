@@ -1,14 +1,11 @@
 from fastapi import APIRouter, UploadFile, File, Form
 from ..utils.prisma import prisma
-from ..utils.volume_calc import volume_calc
+from ..models.Topcon import Topcon
+from ..models.Centerline import Centerline
 from pydantic import BaseModel
 from typing import Annotated
 
 router = APIRouter(prefix="/topcon")
-
-class TopconInfo(BaseModel):
-  width_bot: float
-  slope: float
 
 @router.post("/")
 async def run_topcon(
@@ -19,23 +16,20 @@ async def run_topcon(
   ditch_shp: UploadFile = File(...),
 ):
   
-  result = volume_calc(
+  centerline = Centerline(await prisma.centerline.find_unique(where={"id":centerlineId}))
+
+  topcon = Topcon(
     slope=slope,
     width_bot=width_bot,
+    CL=centerline,
     ground_csv=ground_csv.file,
     ditch_shp=ditch_shp.filename
   )
 
-  # Perform topcon calculation here including calculating KP of points
-  # Transform ditch_shp
-  # Transform ground_csv
-  # Calculate height and area for each point
-  # Convert points to ranges
-  # Calculate volumes for each range
-  # Save all pertinent info to db
-  # Return data_pts and data_rng and KP string
+  print(topcon)
 
-  return result
+  topcon_saved = await prisma.topconrun.create(data=topcon.save())
+  return get_run(topcon_saved["id"])
 
 
 @router.get("/")

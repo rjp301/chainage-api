@@ -33,7 +33,8 @@ model Centerline {
   name        String             @default("")
   description String             @default("")
   line        String // WKT representation of the centerline
-  markers     CenterlineMarker[]
+  m     CenterlineMarker[]
+  crs         String             @default("ESPG:4326")
 
   topcon_runs TopconRun[]
 

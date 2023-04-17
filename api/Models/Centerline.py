@@ -6,6 +6,7 @@ from centerline.format_KP import format_KP
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
+import pandas as pd
 import geopandas as gpd
 import math
 import os
@@ -15,16 +16,24 @@ def round_down(num,divisor): return num - (num%divisor)
 
 @dataclass
 class Centerline:
-  line_data: gpd.GeoDataFrame
-  points: gpd.GeoDataFrame
-  footprint: gpd.GeoDataFrame = None
+  data: dict
+  # line_data: gpd.GeoDataFrame
+  # points: gpd.GeoDataFrame
+  # footprint: gpd.GeoDataFrame = None
 
   gen_offset: bool = False
   crs: str = "EPSG:26910"
 
   def __post_init__(self):
-    assert self.value_col in self.points.columns, "value_col must be a field in points file"
+    self.value_col = "value"
     
+    markers = pd.DataFrame(self.data["markers"])
+    self.points = gpd.GeoDataFrame(
+      data=markers,
+      geometry=gpd.points_from_xy(markers.x,markers.y),
+      crs="EPSG:4326",
+    )
+
     self.points = (self.points
       .to_crs(self.crs)
       .sort_values(self.value_col)
@@ -50,7 +59,12 @@ class Centerline:
       self.offset = self.line.parallel_offset(self.line.length/2000,"left")
 
   def __repr__(self):
-    return f"Centerline: {format_KP(self.KP_min)} - {format_KP(self.KP_max)} [{self.name}]"
+    return f"Centerline: {self.format_KP(self.KP_min)} - {self.format_KP(self.KP_max)} [{self.name}]"
+
+  def save(self):
+    return {
+
+    }
 
   def move_to_ln(self,node):
     return self.line.interpolate(self.line.project(node))
@@ -100,11 +114,11 @@ class Centerline:
     # assert KP >= self.KP_min, f"{format_KP(KP)} is less than min of {format_KP(self.KP_min)}"
 
     if KP > self.KP_max:
-      print(f"{format_KP(KP)} is greater than {format_KP(self.KP_max)}")
+      print(f"{self.format_KP(KP)} is greater than {self.format_KP(self.KP_max)}")
       return None
       
     if KP < self.KP_min: 
-      print(f"{format_KP(KP)} is less than {format_KP(self.KP_min)}")
+      print(f"{self.format_KP(KP)} is less than {self.format_KP(self.KP_min)}")
       return None
 
     temp = self.points.iloc[(self.points[self.value_col] - KP).abs().argsort()[:2]]
@@ -167,3 +181,11 @@ class Centerline:
   def plot(self,ax):
     self.points.plot(ax=ax,color="k",marker="^")
     self.line_data.plot(ax=ax,color='r')
+
+  def format_KP(number,comma=False) -> str:
+    """Formats chainage number as '#+###' e.g. 34032.43 to 34+032"""
+    if type(number) == int or float:
+      post_plus = number % 1000
+      pre_plus = (number - post_plus)/1000
+      return f"{pre_plus:,.0f}+{post_plus:03.0f}" if comma else f"{pre_plus:.0f}+{post_plus:03.0f}"
+    return number
