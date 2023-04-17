@@ -2,17 +2,13 @@ from fastapi import APIRouter
 from ..utils.prisma import prisma
 from pydantic import BaseModel
 
-import json
-
 router = APIRouter(prefix="/centerline")
 
 class Centerline(BaseModel):
+  userId: int
   name: str
   description: str = ""
-  line: dict
-  markers: dict
-  marker_value: str
-  footprint: dict | None = None
+  line: str
 
 @router.get("/")
 async def all_centerlines():

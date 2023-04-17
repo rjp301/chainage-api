@@ -30,12 +30,10 @@ model Centerline {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  name         String @default("")
-  description  String @default("")
-  line         String // GeoJson linestring representation of centerline
-  markers      String // GeoJson points representing KP markers
-  marker_value String // Column name in markers indicated kilometer point
-  footprint    String @default("{}") // GeoJson polygons composing project footprint
+  name        String             @default("")
+  description String             @default("")
+  line        String // WKT representation of the centerline
+  markers     CenterlineMarker[]
 
   topcon_runs TopconRun[]
 
@@ -43,6 +41,21 @@ model Centerline {
   userId Int
 
   @@map("centerlines")
+}
+
+model CenterlineMarker {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  value Float
+  x     Float
+  y     Float
+
+  Centerline   Centerline @relation(fields: [centerlineId], references: [id])
+  centerlineId Int
+
+  @@map("centerline_markers")
 }
 
 model TopconRun {
