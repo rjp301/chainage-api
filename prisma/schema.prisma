@@ -16,8 +16,8 @@ model User {
 
   email    String
   password String
-  name     String?
-  company  String?
+  name     String @default("")
+  company  String @default("")
 
   centerlines Centerline[]
   topcon_runs TopconRun[]
@@ -30,12 +30,12 @@ model Centerline {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  name         String
-  description  String?
+  name         String @default("")
+  description  String @default("")
   line         String // GeoJson linestring representation of centerline
   markers      String // GeoJson points representing KP markers
   marker_value String // Column name in markers indicated kilometer point
-  footprint    String // GeoJson polygons composing project footprint
+  footprint    String @default("{}") // GeoJson polygons composing project footprint
 
   topcon_runs TopconRun[]
 
@@ -52,8 +52,8 @@ model TopconRun {
 
   width_bot      Float
   slope          Float
-  ditch_profile  String?
-  ground_profile String?
+  ditch_profile  String          @default("") // WKT linestring of bottom on ditch
+  ground_profile String          @default("") // GeoJson point collection of ground next to ditch
   total_volume   Float
   data_pts       TopconDataPts[]
   data_rng       TopconDataRng[]
@@ -79,8 +79,8 @@ model TopconDataPts {
   y         Float
   x         Float
   z         Float
-  desc      String?
-  geometry  String
+  desc      String @default("")
+  geometry  String // WKT representation of 3D point
   chainage  Float?
   depth     Float?
   slope     Float?
@@ -90,6 +90,8 @@ model TopconDataPts {
 
   TopconRun TopconRun @relation(fields: [runId], references: [id])
   runId     Int
+
+  @@map("topcon_data_pts")
 }
 
 model TopconDataRng {
@@ -107,4 +109,6 @@ model TopconDataRng {
 
   TopconRun TopconRun @relation(fields: [runId], references: [id])
   runId     Int
+
+  @@map("topcon_data_rng")
 }
