@@ -1,5 +1,6 @@
 from fastapi import APIRouter, UploadFile, File, Form
 from ..utils.prisma import prisma
+from ..utils.volume_calc import volume_calc
 from pydantic import BaseModel
 from typing import Annotated
 
@@ -18,6 +19,13 @@ async def run_topcon(
   ditch_shp: UploadFile = File(...),
 ):
   
+  result = volume_calc(
+    slope=slope,
+    width_bot=width_bot,
+    ground_csv=ground_csv.file,
+    ditch_shp=ditch_shp.filename
+  )
+
   # Perform topcon calculation here including calculating KP of points
   # Transform ditch_shp
   # Transform ground_csv
@@ -27,12 +35,7 @@ async def run_topcon(
   # Save all pertinent info to db
   # Return data_pts and data_rng and KP string
 
-  return {
-    "width_bot": width_bot,
-    "slope": slope,
-    "ground_csv": ground_csv.filename,
-    "ditch_shp": ditch_shp.filename
-  }
+  return result
 
 
 @router.get("/")

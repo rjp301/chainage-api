@@ -7,7 +7,7 @@ import tempfile
 import zipfile
 import os
 
-router = APIRouter()
+router = APIRouter(prefix="/convert")
 
 def create_excel_workbook(file_path, worksheet_data):
   wb = openpyxl.Workbook()
