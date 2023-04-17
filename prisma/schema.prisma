@@ -1,101 +1,110 @@
 generator client {
-  provider = "prisma-client-py"
-  interface = "asyncio"
+  provider             = "prisma-client-py"
+  interface            = "asyncio"
   recursive_type_depth = -1
 }
 
 datasource db {
-  provider = "mongodb"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 model User {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  name     String?
   email    String
   password String
+  name     String?
   company  String?
 
   centerlines Centerline[]
-  // topcon_runs TopconRun[]
+  topcon_runs TopconRun[]
 
   @@map("users")
 }
 
 model Centerline {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   name         String
   description  String?
-  line         Json
-  markers      Json
-  marker_value String
-  footprint    Json
+  line         String // GeoJson linestring representation of centerline
+  markers      String // GeoJson points representing KP markers
+  marker_value String // Column name in markers indicated kilometer point
+  footprint    String // GeoJson polygons composing project footprint
 
-  // topcon_runs TopconRun[]
+  topcon_runs TopconRun[]
 
-  User   User?   @relation(fields: [userId], references: [id])
-  userId String? @db.ObjectId
+  User   User @relation(fields: [userId], references: [id])
+  userId Int
 
   @@map("centerlines")
 }
 
-// // Topcon Volume Calculation
-// type TopconKP {
-//   beg Float
-//   end Float
-//   str String
-// }
+model TopconRun {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-// type TopconDataPts {
-//   num       Float
-//   y         Float
-//   x         Float
-//   z         Float
-//   desc      String?
-//   geometry  String
-//   chainage  Float?
-//   depth     Float?
-//   slope     Float?
-//   width_bot Float?
-//   width_top Float?
-//   area      Float?
-// }
+  width_bot      Float
+  slope          Float
+  ditch_profile  String?
+  ground_profile String?
+  total_volume   Float
+  data_pts       TopconDataPts[]
+  data_rng       TopconDataRng[]
+  KP_beg         Float
+  KP_end         Float
+  KP_str         Float
 
-// type TopconDataRng {
-//   KP_beg   Float
-//   KP_end   Float
-//   area_beg Float
-//   area_end Float
-//   area_avg Float
-//   length   Float
-//   volume   Float
-// }
+  User   User @relation(fields: [userId], references: [id])
+  userId Int
 
-// model TopconRun {
-//   id        String   @id @default(auto()) @map("_id") @db.ObjectId
-//   createdAt DateTime @default(now())
-//   updatedAt DateTime @updatedAt
+  Centerline   Centerline? @relation(fields: [centerlineId], references: [id])
+  centerlineId Int
 
-//   width_bot      Float
-//   slope          Float
-//   ditch_profile  String?
-//   ground_profile Json?
-//   total_volume   Float
-//   data_pts       TopconDataPts[]
-//   data_rng       TopconDataRng[]
-//   KP             TopconKP
+  @@map("topcon_runs")
+}
 
-//   User   User?   @relation(fields: [userId], references: [id])
-//   userId String? @db.ObjectId
+model TopconDataPts {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-//   Centerline   Centerline? @relation(fields: [centerlineId], references: [id])
-//   centerlineId String?     @db.ObjectId
+  num       Float
+  y         Float
+  x         Float
+  z         Float
+  desc      String?
+  geometry  String
+  chainage  Float?
+  depth     Float?
+  slope     Float?
+  width_bot Float?
+  width_top Float?
+  area      Float?
 
-//   @@map("topcon_runs")
-// }
+  TopconRun TopconRun @relation(fields: [runId], references: [id])
+  runId     Int
+}
+
+model TopconDataRng {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  KP_beg   Float
+  KP_end   Float
+  area_beg Float
+  area_end Float
+  area_avg Float
+  length   Float
+  volume   Float
+
+  TopconRun TopconRun @relation(fields: [runId], references: [id])
+  runId     Int
+}
