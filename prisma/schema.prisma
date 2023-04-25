@@ -1,7 +1,7 @@
 generator client {
   provider             = "prisma-client-py"
+  recursive_type_depth = "-1"
   interface            = "asyncio"
-  recursive_type_depth = -1
 }
 
 datasource db {
@@ -10,91 +10,85 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              Int          @id @default(autoincrement())
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
 
-  email    String @unique
-  password String
-  name     String @default("")
-  company  String @default("")
+  email           String       @unique
+  hashed_password String
+  full_name       String       @default("")
+  company         String       @default("")
 
-  centerlines Centerline[]
-  topcon_runs TopconRun[]
+  centerlines     Centerline[]
+  topcon_runs     TopconRun[]
 
   @@map("users")
 }
 
 model Centerline {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  id          Int                @id @default(autoincrement())
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
   name        String             @default("")
   description String             @default("")
-  line        String // WKT representation of the centerline
-  markers     CenterlineMarker[]
+  line        String
   crs         String             @default("ESPG:4326")
-
+  userId      Int
+  markers     CenterlineMarker[]
+  User        User               @relation(fields: [userId], references: [id])
   topcon_runs TopconRun[]
-
-  User   User @relation(fields: [userId], references: [id])
-  userId Int
 
   @@map("centerlines")
 }
 
 model CenterlineMarker {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  value Float
-  x     Float
-  y     Float
-
-  Centerline   Centerline @relation(fields: [centerlineId], references: [id])
+  id           Int        @id @default(autoincrement())
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  value        Float
+  x            Float
+  y            Float
   centerlineId Int
+  Centerline   Centerline @relation(fields: [centerlineId], references: [id])
 
   @@map("centerline_markers")
 }
 
 model TopconRun {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            Int             @id @default(autoincrement())
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
 
   width_bot     Float
   slope         Float
-  ditch_profile String          @default("") // WKT linestring of bottom on ditch
+  ditch_profile String          @default("")
   total_volume  Float
-  data_pts      TopconDataPts[]
-  data_rng      TopconDataRng[]
   data_crs      String          @default("EPSG:4326")
   KP_beg        Float
   KP_end        Float
   KP_rng        String
+  userId        Int
+  centerlineId  Int
 
-  User   User @relation(fields: [userId], references: [id])
-  userId Int
-
-  Centerline   Centerline? @relation(fields: [centerlineId], references: [id])
-  centerlineId Int
+  data_pts      TopconDataPts[]
+  data_rng      TopconDataRng[]
+  Centerline    Centerline      @relation(fields: [centerlineId], references: [id])
+  User          User            @relation(fields: [userId], references: [id])
 
   @@map("topcon_runs")
 }
 
 model TopconDataPts {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id        Int       @id @default(autoincrement())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
   num       Float
   y         Float
   x         Float
   z         Float
-  desc      String @default("")
-  geometry  String // WKT representation of 3D point
+  desc      String    @default("")
+  geometry  String
   chainage  Float?
   depth     Float?
   slope     Float?
@@ -102,27 +96,27 @@ model TopconDataPts {
   width_top Float?
   area      Float?
 
-  TopconRun TopconRun @relation(fields: [runId], references: [id])
   runId     Int
+  TopconRun TopconRun @relation(fields: [runId], references: [id])
 
   @@map("topcon_data_pts")
 }
 
 model TopconDataRng {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id        Int       @id @default(autoincrement())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
-  KP_beg   Float
-  KP_end   Float
-  area_beg Float
-  area_end Float
-  area_avg Float
-  length   Float
-  volume   Float
+  KP_beg    Float
+  KP_end    Float
+  area_beg  Float
+  area_end  Float
+  area_avg  Float
+  length    Float
+  volume    Float
 
-  TopconRun TopconRun @relation(fields: [runId], references: [id])
   runId     Int
+  TopconRun TopconRun @relation(fields: [runId], references: [id])
 
   @@map("topcon_data_rng")
 }
