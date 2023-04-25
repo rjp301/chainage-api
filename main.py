@@ -1,10 +1,9 @@
 from api.utils.prisma import prisma
-from api.endpoints import convert,topcon,centerline
+from api.endpoints import topcon,centerline
 
 from fastapi import FastAPI,APIRouter
 
 api = APIRouter(prefix="/api")
-api.include_router(convert.router)
 api.include_router(topcon.router)
 api.include_router(centerline.router)
 
