@@ -99,4 +99,5 @@ class Topcon:
       "KP_rng": self.KP_rng,
       "centerlineId": self.CL.id,
       "userId": 1,
+      "data_crs": self.CL.crs,
     }

@@ -64,15 +64,16 @@ model TopconRun {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  width_bot      Float
-  slope          Float
-  ditch_profile  String          @default("") // WKT linestring of bottom on ditch
-  total_volume   Float
-  data_pts       TopconDataPts[]
-  data_rng       TopconDataRng[]
-  KP_beg         Float
-  KP_end         Float
-  KP_rng         String
+  width_bot     Float
+  slope         Float
+  ditch_profile String          @default("") // WKT linestring of bottom on ditch
+  total_volume  Float
+  data_pts      TopconDataPts[]
+  data_rng      TopconDataRng[]
+  data_crs      String          @default("EPSG:4326")
+  KP_beg        Float
+  KP_end        Float
+  KP_rng        String
 
   User   User @relation(fields: [userId], references: [id])
   userId Int
