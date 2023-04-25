@@ -6,6 +6,7 @@ from ..models.Centerline import Centerline
 from typing import Annotated
 from tempfile import NamedTemporaryFile
 
+from .auth import manager
 import pandas as pd
 
 router = APIRouter(prefix="/topcon")
@@ -18,6 +19,7 @@ async def run_topcon(
   data_crs: Annotated[str,Form()],
   ground_csv: UploadFile = File(...),
   ditch_shp: UploadFile = File(...),
+  user = Depends(manager)
 ):
   
   centerline = Centerline(await prisma
@@ -32,7 +34,8 @@ async def run_topcon(
     width_bot=width_bot,
     CL=centerline.to_crs(data_crs),
     file_ground=ground_csv,
-    file_ditch=ditch_shp
+    file_ditch=ditch_shp,
+    user_id=user.id,
   )
 
   topcon_saved = await prisma.topconrun.create(
@@ -43,8 +46,8 @@ async def run_topcon(
 
 
 @router.get("/")
-async def all_topcon_runs():
-  return await prisma.topconrun.find_many()
+async def all_topcon_runs(user = Depends(manager)):
+  return await prisma.topconrun.find_many(where={"userId":user.id})
 
 
 @router.get("/{run_id}")

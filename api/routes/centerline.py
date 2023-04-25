@@ -1,7 +1,9 @@
-from fastapi import APIRouter, UploadFile, File, Form
+from fastapi import APIRouter, UploadFile, File, Form, Depends, HTTPException
 from ..utils.prisma import prisma
 from pydantic import BaseModel
 from typing import Annotated
+
+from .auth import manager
 
 import geopandas as gpd
 import shapely.ops
@@ -9,15 +11,18 @@ import shapely.ops
 router = APIRouter(prefix="/centerline")
 
 @router.get("/")
-async def all_centerlines():
-  return await prisma.centerline.find_many()
+async def all_centerlines(user=Depends(manager)):
+  return await prisma.centerline.find_many(where={"userId":user.id})
 
 @router.get("/{centerline_id}")
-async def get_centerline(centerline_id:int):
-  return await prisma.centerline.find_unique(
+async def get_centerline(centerline_id:int,user=Depends(manager)):
+  result = await prisma.centerline.find_unique(
     where={"id":centerline_id},
     include={"markers": True}
   )
+  if result.userId != user.id:
+    raise HTTPException(status_code=401,detail="Not authorized to access item") 
+  return result
 
 @router.post("/")
 async def create_centerline(
@@ -27,6 +32,7 @@ async def create_centerline(
   shp_line: UploadFile = File(...),
   shp_markers: UploadFile = File(...),
   shp_footprint: UploadFile = File(...),
+  user=Depends(manager),
 ):
   
   EPSG_4326 = "EPSG:4326"
@@ -44,7 +50,7 @@ async def create_centerline(
 
   return await prisma.centerline.create(
     data={
-      "userId": 1,
+      "userId": user.id,
       "name": name,
       "description": description,
       "line": line,
@@ -57,5 +63,5 @@ async def create_centerline(
   )
 
 @router.delete("/{centerline_id}")
-async def delete_centerline(centerline_id:int):
+async def delete_centerline(centerline_id:int,user=Depends(manager)):
   return await prisma.centerline.delete(where={"id":centerline_id})
