@@ -33,7 +33,7 @@ model Centerline {
   name        String             @default("")
   description String             @default("")
   line        String // WKT representation of the centerline
-  m     CenterlineMarker[]
+  markers     CenterlineMarker[]
   crs         String             @default("ESPG:4326")
 
   topcon_runs TopconRun[]
@@ -67,13 +67,12 @@ model TopconRun {
   width_bot      Float
   slope          Float
   ditch_profile  String          @default("") // WKT linestring of bottom on ditch
-  ground_profile String          @default("") // GeoJson point collection of ground next to ditch
   total_volume   Float
   data_pts       TopconDataPts[]
   data_rng       TopconDataRng[]
   KP_beg         Float
   KP_end         Float
-  KP_str         Float
+  KP_rng         String
 
   User   User @relation(fields: [userId], references: [id])
   userId Int

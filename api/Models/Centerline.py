@@ -1,129 +1,112 @@
-from dataclasses import dataclass
-from shapely.ops import linemerge,substring
-from shapely.geometry import LineString,Point
-from centerline.format_KP import format_KP
-
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 import pandas as pd
 import geopandas as gpd
-import math
-import os
+import shapely.wkt
+import shapely.geometry
+import shapely.ops
+import pyproj
 
 def round_up(num,divisor): return num + divisor - (num%divisor)
 def round_down(num,divisor): return num - (num%divisor)
 
-@dataclass
+def format_KP(number,comma=False) -> str:
+  """Formats chainage number as '#+###' e.g. 34032.43 to 34+032"""
+  if type(number) == int or float:
+    post_plus = number % 1000
+    pre_plus = (number - post_plus)/1000
+    return f"{pre_plus:,.0f}+{post_plus:03.0f}" if comma else f"{pre_plus:.0f}+{post_plus:03.0f}"
+  return number
+
 class Centerline:
-  data: dict
-  # line_data: gpd.GeoDataFrame
-  # points: gpd.GeoDataFrame
-  # footprint: gpd.GeoDataFrame = None
+  def __init__(self,prisma_obj) -> None:
+    self.id: int = prisma_obj.id
+    self.name: str = prisma_obj.name
+    self.description: str = prisma_obj.description
+    self.crs: str = prisma_obj.crs
 
-  gen_offset: bool = False
-  crs: str = "EPSG:26910"
-
-  def __post_init__(self):
-    self.value_col = "value"
+    self.line: shapely.geometry.LineString = shapely.wkt.loads(prisma_obj.line)
     
-    markers = pd.DataFrame(self.data["markers"])
-    self.points = gpd.GeoDataFrame(
-      data=markers,
-      geometry=gpd.points_from_xy(markers.x,markers.y),
-      crs="EPSG:4326",
+    markers_df = pd.DataFrame.from_records([i.__dict__ for i in prisma_obj.markers])
+    self.markers: gpd.GeoDataFrame = gpd.GeoDataFrame(
+      data=markers_df,
+      geometry=gpd.points_from_xy(markers_df["x"],markers_df["y"]),
+      crs=self.crs,
     )
 
-    self.points = (self.points
-      .to_crs(self.crs)
-      .sort_values(self.value_col)
-      .reset_index(drop=True)
-      )
-    self.points[self.value_col] = self.points[self.value_col].astype(float)
-    # self.points.to_csv("test.csv")
-
-    self.line = (self.line_data
-      .to_crs(self.crs)
-      .geometry
-      .unary_union
-      )
-    self.line = linemerge(self.line) if self.line.geom_type == "MultiLineString" else self.line
-
-    if self.footprint is not None:
-      self.footprint = self.footprint.to_crs(self.crs)
-
-    self.KP_min = self.points[self.value_col].min()
-    self.KP_max = self.points[self.value_col].max()
-
-    if self.gen_offset:
-      self.offset = self.line.parallel_offset(self.line.length/2000,"left")
-
+    self.KP_min: float = min(self.markers["value"])
+    self.KP_max: float = max(self.markers["value"])
+  
   def __repr__(self):
-    return f"Centerline: {self.format_KP(self.KP_min)} - {self.format_KP(self.KP_max)} [{self.name}]"
+    return f"Centerline: {format_KP(self.KP_min)} - {format_KP(self.KP_max)} [{self.name}]"
+  
+  def to_crs(self,target_crs):
+    current = pyproj.CRS(self.crs)
+    target = pyproj.CRS(target_crs)
+    project = pyproj.Transformer.from_crs(current,target,always_xy=True).transform
+    
+    self.line = shapely.ops.transform(project,self.line)
+    self.markers = self.markers.to_crs(target_crs)
+    self.crs = target_crs
 
-  def save(self):
-    return {
+    return self
 
-    }
-
-  def move_to_ln(self,node):
+  def move_to_ln(self, node:shapely.geometry.Point) -> shapely.geometry.Point:
     return self.line.interpolate(self.line.project(node))
-
-  def splice(self,p1,p2):
+  
+  def splice(self, p1:shapely.geometry.Point, p2:shapely.geometry.Point) -> shapely.geometry.LineString | shapely.geometry.Point:
     p1_proj = self.line.project(p1)
     p2_proj = self.line.project(p2)
     projs = (p1_proj,p2_proj)
-    return substring(self.line,min(projs),max(projs))
-
-  def dist_to_ln(self,node,signed=True):
+    return shapely.ops.substring(self.line,min(projs),max(projs))
+  
+  def dist_to_ln(self,node,signed=True) -> float:
     moved = self.move_to_ln(node)
     distance = moved.distance(node)
     if not signed: return distance
-    assert self.offset, "Parallel line must be instantiated"
+
+    if not hasattr(self,"offset"):
+      self.offset = self.line.parallel_offset(self.line.length/2000,"left")
+
     moved_offset = self.offset.interpolate(self.line.project(node))
-    line_offset = LineString([node,moved_offset])
+    line_offset = shapely.geometry.LineString([node,moved_offset])
     return distance if line_offset.intersects(self.line) else -distance
-
-  def find_KP(self,node:Point):
+  
+  def find_KP(self,node:shapely.geometry.Point) -> float:
     node_mvd = self.move_to_ln(node)
-    nearest = self.points.sindex.nearest(geometry=node)[1]
-    nearest = self.points.iloc[nearest]
+    nearest = self.markers.sindex.nearest(geometry=node)[1]
+    nearest = self.markers.iloc[nearest]
 
-    k1 = nearest.iloc[0][self.value_col]
+    k1 = nearest.iloc[0]["value"]
     p1 = self.line.project(nearest.iloc[0].geometry)
     p = self.line.project(node_mvd)
 
     nearest_i = nearest.index[0]
     next_kp_i = nearest_i + 1 if p > p1 else nearest_i - 1
-    next_kp = self.points.iloc[next_kp_i]
+    next_kp = self.markers.iloc[next_kp_i]
 
-    k2 = next_kp[self.value_col]
+    k2 = next_kp["value"]
     p2 = self.line.project(next_kp.geometry)
 
     k = k1 + (p - p1) * (k2 - k1) / (p2 - p1)
     return k
 
-  def perp_angle(self,node):
-    assert self.offset, "Must generate offset at instantiation to find perpindicular angle"
-    moved_pt = self.move_to_ln(node)
-    offset_pt = self.offset.interpolate(self.offset.project(node))
-    return math.degrees(math.atan2(offset_pt.y - moved_pt.y,offset_pt.x - moved_pt.x))
-
-  def from_KP(self,KP):
+  def from_KP(self, KP:float) -> shapely.geometry.Point | None:
     # assert KP <= self.KP_max, f"{format_KP(KP)} is greater than max of {format_KP(self.KP_max)}"
     # assert KP >= self.KP_min, f"{format_KP(KP)} is less than min of {format_KP(self.KP_min)}"
 
     if KP > self.KP_max:
-      print(f"{self.format_KP(KP)} is greater than {self.format_KP(self.KP_max)}")
+      print(f"{format_KP(KP)} is greater than {format_KP(self.KP_max)}")
       return None
       
     if KP < self.KP_min: 
-      print(f"{self.format_KP(KP)} is less than {self.format_KP(self.KP_min)}")
+      print(f"{format_KP(KP)} is less than {format_KP(self.KP_min)}")
       return None
 
-    temp = self.points.iloc[(self.points[self.value_col] - KP).abs().argsort()[:2]]
-    k1 = temp.iloc[0][self.value_col]
-    k2 = temp.iloc[1][self.value_col]
+    temp = self.markers.iloc[(self.markers["value"] - KP).abs().argsort()[:2]]
+    k1 = temp.iloc[0]["value"]
+    k2 = temp.iloc[1]["value"]
 
     if k1 == KP or k1 == k2: return temp.iloc[0].geometry
     
@@ -133,7 +116,7 @@ class Centerline:
     p = p1 + (KP - k1) * (p2 - p1) / (k2 - k1)
     return self.line.interpolate(p)
 
-  def splice_KP(self,KP_beg,KP_end,crop=True):
+  def splice_KP(self, KP_beg:float, KP_end:float, crop=True) -> shapely.geometry.LineString | None:
     """Returns linestring between the two KP values"""
     if crop:
       KP_beg = max(min(KP_beg,KP_end),self.KP_min)
@@ -153,17 +136,9 @@ class Centerline:
     for i in range(num_segs):
       p1 = i * actual_seg_length
       p2 = (i + 1) * actual_seg_length
-      result.append(substring(self.line,p1,p2))
+      result.append(shapely.ops.substring(self.line,p1,p2))
 
     return gpd.GeoSeries(result,crs=self.crs)
-
-  def hollow_fp(self):
-    assert self.footprint is not None, "Footprint file must be imported"
-    hollow = self.footprint.copy()
-    hollow.geometry = hollow.buffer(0.01)
-    hollow = hollow.dissolve()
-    self.hollow = hollow.iloc[0].geometry.buffer(-0.01)
-    return self.hollow
 
   def reg_chainages(self,divisor):
     chainages = []
@@ -177,15 +152,3 @@ class Centerline:
       i += divisor
     if self.KP_max > KP_end: chainages.append(self.KP_max)
     return chainages
-
-  def plot(self,ax):
-    self.points.plot(ax=ax,color="k",marker="^")
-    self.line_data.plot(ax=ax,color='r')
-
-  def format_KP(number,comma=False) -> str:
-    """Formats chainage number as '#+###' e.g. 34032.43 to 34+032"""
-    if type(number) == int or float:
-      post_plus = number % 1000
-      pre_plus = (number - post_plus)/1000
-      return f"{pre_plus:,.0f}+{post_plus:03.0f}" if comma else f"{pre_plus:.0f}+{post_plus:03.0f}"
-    return number
