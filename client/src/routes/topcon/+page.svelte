@@ -1,0 +1,71 @@
+<script>
+  import InputRow from "./InputRow.svelte";
+</script>
+
+<main class="max-w-3xl mx-auto p-4">
+  <h1>TOPCON Ditch Volume</h1>
+
+  <p>
+    Calculates the volume of a ditch based on the difference in height of the
+    designed ditch bottom and survey shots of construction grade, along with
+    side-wall slope and the width of ditch bottom.
+  </p>
+  <p>
+    Ensure Ditch Profile and Ground Shots are in the same UTM coordinate system
+    as the selected centerline.
+  </p>
+  <br />
+
+  <h2>Parameters</h2>
+  <form method="post" enctype="multipart/form-data" class="grid divide-y">
+    <InputRow id="centerlineId" name="Centerline">
+      <select
+      class="appearance-none outline outline-gray-300 outline-1 rounded px-2 py-1 w-1/4"
+        name="centerlineId"
+        id="centerlineId"
+      >
+        <option value="1">TMEP S5B 5.24.16</option>
+      </select>
+    </InputRow>
+
+    <InputRow id="slope" name="Slope of Ditch Sides [slope:1]" type="number" />
+
+    <InputRow id="width_bot" name="Width of Ditch Bottom [m]" type="number" />
+
+    <InputRow
+      id="ditch_shp"
+      type="file"
+      filetype=".shp"
+      name="Designed Ditch Profile [SHP]"
+      subtext="3D SHP file of bottom of ditch"
+    />
+
+    <InputRow
+      id="ground_csv"
+      type="file"
+      filetype=".csv"
+      name="Surveyed Ground Profile [CSV]"
+      subtext="Survey shots as CSV file in the format ID, X, Y, Z, DESC"
+    />
+
+    <InputRow
+      id="data_crs"
+      name="Data CRS [EPSG:####]"
+      type="text"
+      subtext="EPSG No. of the Coordinate Reference System used"
+    />
+    <div class="flex gap-4 py-2">
+      <button
+      class="px-1 py-1 w-full bg-red-500 rounded text-white"
+      type="submit">Submit</button
+      >
+      <button
+      class="px-1 py-1 w-full bg-red-500 rounded text-white"
+      type="reset">Reset</button
+      >
+    </div>
+  </form>
+  
+  <br>
+  <h2>Results</h2>
+</main>
