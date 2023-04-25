@@ -1,18 +1,20 @@
 from api.utils.prisma import prisma
-from api.endpoints import topcon,centerline
+from api.routes import topcon,centerline,auth
 
 from fastapi import FastAPI,APIRouter
 
 api = APIRouter(prefix="/api")
-api.include_router(topcon.router)
+api.include_router(auth.router)
 api.include_router(centerline.router)
+api.include_router(topcon.router)
 
 app = FastAPI(
     debug=True,
     title="Pipeline Applets",
-    description="Collection of functions and data useful for constructing pipelines"
+    description="Collection of functions and data, useful for constructing pipelines"
 )
 app.include_router(api)
+
 
 @app.on_event("startup")
 async def startup():
