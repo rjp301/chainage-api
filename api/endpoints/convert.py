@@ -21,10 +21,8 @@ def create_excel_workbook(file_path, worksheet_data):
 
 async def get_temp_dir():
   fname = tempfile.NamedTemporaryFile(suffix=".xlsx")
-  try:
-    yield fname.name
-  finally:
-    del fname
+  try: yield fname.name
+  finally: del fname
 
 
 @router.post("/json-to-excel")

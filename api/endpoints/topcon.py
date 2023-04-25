@@ -1,11 +1,12 @@
-from fastapi import APIRouter, UploadFile, File, Form
+from fastapi import APIRouter, UploadFile, File, Form, Depends
+from fastapi.responses import FileResponse
 from ..utils.prisma import prisma
 from ..models.Topcon import Topcon
 from ..models.Centerline import Centerline
-from pydantic import BaseModel
 from typing import Annotated
+from tempfile import NamedTemporaryFile
 
-import json
+import pandas as pd
 
 router = APIRouter(prefix="/topcon")
 
@@ -34,10 +35,9 @@ async def run_topcon(
     file_ditch=ditch_shp
   )
 
-  with open("test.json","w") as file: json.dump(topcon.save(),file)
   topcon_saved = await prisma.topconrun.create(
     data=topcon.save(),
-    include={"data_pts":True,"data_rng":True}
+    include={ "data_pts":True, "data_rng":True }
   )
   return topcon_saved
 
@@ -49,13 +49,38 @@ async def all_topcon_runs():
 
 @router.get("/{run_id}")
 async def get_run(run_id: int):
-  run = await prisma.topconrun.find_unique(where={ "id": run_id })
-  # data_rng = await prisma.topcondatarng.find_unique(where={"runId": run_id})
-  # data_pts = await prisma.topcondatapts.find_unique(where={"runId": run_id})
-  # return {"info": run, "data_pts": data_pts, "data_rng": data_rng}
+  run = await prisma.topconrun.find_unique(
+    where={ "id": run_id },
+    include={ "data_pts":True, "data_rng":True }
+  )
   return run
 
-@router.get("/download/{run_id}")
-async def download_run(run_id: int):
-  return { "run_id": run_id }
+async def get_temp_dir():
+  fname = NamedTemporaryFile(suffix=".xlsx")
+  try: yield fname.name
+  finally: del fname
+
+@router.get("/{run_id}/download")
+async def download_run(run_id: int, temp_file=Depends(get_temp_dir)):
+  run = await get_run(run_id)
+  
+  pts_cols = ["num","x","y","z","desc","geometry","chainage","slope","width_bot","width_top","area"]
+  pts_rename = {i:i.upper() for i in pts_cols}
+
+  rng_cols = ["KP_beg","KP_end","area_beg","area_end","area_avg","length","volume"]
+  rng_rename = {i:i.upper() for i in rng_cols}
+
+  excel_pts = pd.DataFrame.from_records([i.__dict__ for i in run.data_pts])[pts_cols].rename(pts_rename,axis=1)
+  excel_rng = pd.DataFrame.from_records([i.__dict__ for i in run.data_rng])[rng_cols].rename(rng_rename,axis=1)
+
+  filename = f"Ditch Volume - {run.KP_rng}.xlsx"
+
+  with pd.ExcelWriter(temp_file) as writer:
+    excel_pts.to_excel(writer,sheet_name="point_data",index=False)
+    excel_rng.to_excel(writer,sheet_name="range_data",index=False)
+
+  return FileResponse(temp_file, 
+    media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", 
+    filename=filename
+  )
 
