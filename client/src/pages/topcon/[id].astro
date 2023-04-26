@@ -7,11 +7,24 @@ const { id } = Astro.params;
 const response = await fetch(`http://127.0.0.1:8000/api/topcon/${id}`);
 const data = await response.json();
 
-console.log(data);
+// console.log(data);
 ---
 
 <PageLayout title="TOPCON Ditch Volume">
   <TopconLayout>
+    <div class="flex justify-between items-center">
+      <div>
+        <h2>Ditch Volume Calculation - {data.KP_rng}</h2>
+        <p>{new Date(data.createdAt)}</p>
+      </div>
+      <a
+        href={`http://127.0.0.1:8000/api/topcon/${id}/download`}
+        class="bg-red-500 px-8 py-2 text-white rounded shadow font-bold"
+        download
+        >Download Excel</a
+      >
+    </div>
+    <br />
     <Table
       columns={[
         "num",
@@ -40,8 +53,5 @@ console.log(data);
       ]}
       data={data.data_rng}
     />
-
-    <a href={`http://127.0.0.1:8000/api/topcon/${id}/download`}>Download</a>
-
   </TopconLayout>
 </PageLayout>

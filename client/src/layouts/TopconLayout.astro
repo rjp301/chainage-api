@@ -4,14 +4,23 @@ export interface Props {
 }
 
 const { blurb } = Astro.params;
+const response = await fetch(`http://127.0.0.1:8000/api/topcon/`);
+const data = await response.json();
+console.log(data);
 ---
 
 <p>{blurb}</p>
 <div class="flex">
-
   <aside class="bg-blue-500 h-full">
-    <div>new Item</div>
-    {[1, 2, 3, 4, 5, 6, 7].map((item) => <div>{item} - item</div>)}
+    <a href="/topcon">Perform New Run</a>
+
+    {
+      data.map((item: any) => (
+        <a href={`/topcon/{item.id}`}>
+          <div>{item.KP_rng}</div>
+        </a>
+      ))
+    }
   </aside>
   <main class="flex-1 px-4">
     <slot />
