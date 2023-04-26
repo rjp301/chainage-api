@@ -1,0 +1,46 @@
+---
+interface Props {
+  id: string;
+  name: string;
+  subtext?: string;
+  type?: string;
+  filetype?: string;
+}
+
+const { id, name, subtext, type, filetype } = Astro.props;
+---
+
+<div class="py-2 flex justify-between items-center">
+  <div>
+    <label for={id}>{name}</label>
+    {subtext && <p class="text-sm text-gray-500">{subtext}</p>}
+  </div>
+
+  {
+    type === "number" && (
+      <input
+        class="appearance-none outline outline-gray-300 outline-1 rounded px-2 py-1 w-1/4"
+        type="number"
+        name={id}
+        step="0.5"
+        min="0"
+        placeholder="Enter Number"
+      />
+    )
+  }
+
+  {
+    type === "text" && (
+      <input
+        class="appearance-none outline outline-gray-300 outline-1 rounded px-2 py-1 w-1/4"
+        type="text"
+        name={id}
+        placeholder="Enter Text"
+      />
+    )
+  }
+
+  {type === "file" && <input type="file" name={id} accept={filetype} />}
+
+  <slot />
+</div>
