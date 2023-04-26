@@ -1,0 +1,47 @@
+---
+import Table from "@components/Table.astro";
+import PageLayout from "@layouts/PageLayout.astro";
+import TopconLayout from "@layouts/TopconLayout.astro";
+
+const { id } = Astro.params;
+const response = await fetch(`http://127.0.0.1:8000/api/topcon/${id}`);
+const data = await response.json();
+
+console.log(data);
+---
+
+<PageLayout title="TOPCON Ditch Volume">
+  <TopconLayout>
+    <Table
+      columns={[
+        "num",
+        "x",
+        "y",
+        "z",
+        "desc",
+        "chainage",
+        "slope",
+        "width_bot",
+        "width_top",
+        "area",
+      ]}
+      data={data.data_pts}
+    />
+
+    <Table
+      columns={[
+        "KP_beg",
+        "KP_end",
+        "area_beg",
+        "area_end",
+        "area_avg",
+        "length",
+        "volume",
+      ]}
+      data={data.data_rng}
+    />
+
+    <a href={`http://127.0.0.1:8000/api/topcon/${id}/download`}>Download</a>
+
+  </TopconLayout>
+</PageLayout>

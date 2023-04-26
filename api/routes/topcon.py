@@ -46,8 +46,8 @@ async def run_topcon(
 
 
 @router.get("/")
-async def all_topcon_runs(user = Depends(manager)):
-  return await prisma.topconrun.find_many(where={"userId":user.id})
+async def all_topcon_runs():
+  return await prisma.topconrun.find_many()
 
 
 @router.get("/{run_id}")

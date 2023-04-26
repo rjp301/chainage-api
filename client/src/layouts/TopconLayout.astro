@@ -1,0 +1,19 @@
+---
+export interface Props {
+  blurb?: string;
+}
+
+const { blurb } = Astro.params;
+---
+
+<p>{blurb}</p>
+<div class="flex">
+
+  <aside class="bg-blue-500 h-full">
+    <div>new Item</div>
+    {[1, 2, 3, 4, 5, 6, 7].map((item) => <div>{item} - item</div>)}
+  </aside>
+  <main class="flex-1 px-4">
+    <slot />
+  </main>
+</div>
