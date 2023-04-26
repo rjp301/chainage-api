@@ -1,46 +1,48 @@
 ---
-interface Props {
-  id: string;
-  name: string;
-  subtext?: string;
-  type?: string;
-  filetype?: string;
-}
+import type { HTMLAttributes } from "astro/types";
+import type { RequireSome } from "@helpers/types";
 
-const { id, name, subtext, type, filetype } = Astro.props;
+type option = {
+  value: number;
+  name: string;
+};
+
+export type Props = RequireSome<HTMLAttributes<"input">, "id"> & {
+  label: string;
+  subtext?: string;
+  selectOptions?: option[];
+};
+
+const { id, label, subtext, selectOptions, ...attrs } = Astro.props;
 ---
 
 <div class="py-2 flex justify-between items-center">
   <div>
-    <label for={id}>{name}</label>
+    <label for={id}>{label}</label>
     {subtext && <p class="text-sm text-gray-500">{subtext}</p>}
   </div>
 
   {
-    type === "number" && (
-      <input
-        class="appearance-none outline outline-gray-300 outline-1 rounded px-2 py-1 w-1/4"
-        type="number"
+    selectOptions ? (
+      <select
+        id={id}
         name={id}
-        step="0.5"
-        min="0"
-        placeholder="Enter Number"
+        class="appearance-none outline outline-gray-300 outline-1 rounded px-2 py-1 w-1/4"
+        {...attrs}
+      >
+        {selectOptions.map((opt) => (
+          <option value={opt.value}>{opt.name}</option>
+        ))}
+      </select>
+    ) : (
+      <input
+        id={id}
+        name={id}
+        class="appearance-none outline outline-gray-300 outline-1 rounded px-2 py-1 w-1/4"
+        {...attrs}
       />
     )
   }
-
-  {
-    type === "text" && (
-      <input
-        class="appearance-none outline outline-gray-300 outline-1 rounded px-2 py-1 w-1/4"
-        type="text"
-        name={id}
-        placeholder="Enter Text"
-      />
-    )
-  }
-
-  {type === "file" && <input type="file" name={id} accept={filetype} />}
 
   <slot />
 </div>
