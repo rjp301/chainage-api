@@ -1,15 +1,13 @@
 <script lang="ts">
   type option = {
-    value: number;
+    id: number;
     name: string;
   };
 
   export let id: string;
   export let label: string;
   export let subtext: string = "";
-  export let selectOptions: option[] = [];
-
-  console.log($$restProps)
+  export let selectOptions: option[] | undefined = undefined;
 </script>
 
 <div class="py-2 flex justify-between items-center">
@@ -28,7 +26,7 @@
       {...$$restProps}
     >
       {#each selectOptions as opt}
-        <option value={opt.value}>{opt.name}</option>
+        <option value={opt.id}>{opt.name}</option>
       {/each}
     </select>
   {:else}

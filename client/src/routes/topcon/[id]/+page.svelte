@@ -1,8 +1,18 @@
 <script lang="ts">
   import Table from "../../../components/Table.svelte";
   import type { PageData } from "./$types";
+  import { goto, invalidateAll, invalidate } from "$app/navigation";
 
   export let data: PageData;
+
+  const deleteTopconRun = async () => {
+    if (!confirm(`Are you certain you want to delete this run?`)) return;
+    await fetch(`http://127.0.0.1:8000/api/topcon/${data.topconRun.id}`, {
+      method: "DELETE",
+    });
+    await goto("/topcon");
+    invalidateAll()
+  };
 </script>
 
 <div class="flex justify-between items-center">
@@ -10,11 +20,20 @@
     <h2>Ditch Volume Calculation - {data.topconRun.KP_rng}</h2>
     <p>{new Date(data.topconRun.createdAt)}</p>
   </div>
-  <a
-    href={`http://127.0.0.1:8000/api/topcon/${data.topconRun.id}/download`}
-    class="bg-red-500 px-8 py-2 text-white rounded shadow font-bold"
-    download>Download Excel</a
-  >
+
+  <div class="flex gap-2">
+    <button
+      on:click={deleteTopconRun}
+      class="bg-gray-500 px-8 py-2 text-white rounded shadow font-bold"
+    >
+      Delete
+    </button>
+    <a
+      class="bg-red-500 px-8 py-2 text-white rounded shadow font-bold"
+      href={`http://127.0.0.1:8000/api/topcon/${data.topconRun.id}/download`}
+      download>Download Excel</a
+    >
+  </div>
 </div>
 <br />
 <div class="text-lg font-bold text-red-500">

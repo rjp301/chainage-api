@@ -35,7 +35,7 @@ model Centerline {
   crs         String             @default("ESPG:4326")
   userId      Int
   markers     CenterlineMarker[]
-  User        User               @relation(fields: [userId], references: [id])
+  User        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   topcon_runs TopconRun[]
 
   @@map("centerlines")
@@ -49,7 +49,7 @@ model CenterlineMarker {
   x            Float
   y            Float
   centerlineId Int
-  Centerline   Centerline @relation(fields: [centerlineId], references: [id])
+  Centerline   Centerline @relation(fields: [centerlineId], references: [id], onDelete: Cascade)
 
   @@map("centerline_markers")
 }
@@ -72,8 +72,8 @@ model TopconRun {
 
   data_pts      TopconDataPts[]
   data_rng      TopconDataRng[]
-  Centerline    Centerline      @relation(fields: [centerlineId], references: [id])
-  User          User            @relation(fields: [userId], references: [id])
+  Centerline    Centerline      @relation(fields: [centerlineId], references: [id], onDelete: Cascade)
+  User          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("topcon_runs")
 }
@@ -97,7 +97,7 @@ model TopconDataPts {
   area      Float?
 
   runId     Int
-  TopconRun TopconRun @relation(fields: [runId], references: [id])
+  TopconRun TopconRun @relation(fields: [runId], references: [id], onDelete: Cascade)
 
   @@map("topcon_data_pts")
 }
@@ -116,7 +116,7 @@ model TopconDataRng {
   volume    Float
 
   runId     Int
-  TopconRun TopconRun @relation(fields: [runId], references: [id])
+  TopconRun TopconRun @relation(fields: [runId], references: [id], onDelete: Cascade)
 
   @@map("topcon_data_rng")
 }

@@ -11,8 +11,8 @@ import shapely.ops
 router = APIRouter(prefix="/centerline")
 
 @router.get("/")
-async def all_centerlines(user=Depends(manager)):
-  return await prisma.centerline.find_many(where={"userId":user.id})
+async def all_centerlines():
+  return await prisma.centerline.find_many()
 
 @router.get("/{centerline_id}")
 async def get_centerline(centerline_id:int,user=Depends(manager)):

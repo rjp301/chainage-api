@@ -1,7 +1,10 @@
 <script lang="ts">
-  import type { PageData } from "./$types";
   import { page } from "$app/stores";
+  import { redirect } from "@sveltejs/kit";
+  import type { PageData } from "./$types";
   export let data: PageData;
+
+
 </script>
 
 <div class="flex w-full">

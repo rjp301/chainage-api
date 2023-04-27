@@ -58,6 +58,10 @@ async def get_run(run_id: int):
   )
   return run
 
+@router.delete("/{run_id}")
+async def delete_run(run_id: int):
+  return await prisma.topconrun.delete(where={"id":run_id})
+
 async def get_temp_dir():
   fname = NamedTemporaryFile(suffix=".xlsx")
   try: yield fname.name
