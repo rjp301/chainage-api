@@ -29,7 +29,7 @@
       {#each data as row}
         <tr class="border-t">
           {#each columns as column}
-            <td class="px-2 py-1">
+            <td class="px-2 py-1 text-sm">
               {displayValue(row[column])}
             </td>
           {/each}

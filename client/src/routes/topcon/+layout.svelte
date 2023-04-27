@@ -5,7 +5,7 @@
 </script>
 
 <div class="flex w-full">
-  <aside class="w-fit">
+  <aside class="w-fit h-screen bg-slate-50 sticky top-0 left-0">
     <a href={`/topcon`}>
       <div
         class="py-2 px-4 whitespace-nowrap border-b"
