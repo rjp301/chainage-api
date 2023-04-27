@@ -1,18 +1,32 @@
 <script lang="ts">
   import type { PageData } from "./$types";
+  import { page } from "$app/stores";
   export let data: PageData;
 </script>
 
-<aside>
-  {#each data.topconRuns as run}
-    <a href={`/topcon/${run.id}`}>
-      <div>{run.KP_rng}</div>
+<div class="flex w-full">
+  <aside class="w-fit">
+    <a href={`/topcon`}>
+      <div
+        class="py-2 px-4 whitespace-nowrap border-b"
+        class:font-bold={$page.url.pathname == "/topcon"}
+      >
+        ➕ New Calculation
+      </div>
     </a>
-  {/each}
-</aside>
+    {#each data.topconRuns as run}
+      <a href={`/topcon/${run.id}`}>
+        <div
+          class="py-2 px-4 whitespace-nowrap border-b"
+          class:font-bold={$page.url.pathname.includes(`/topcon/${run.id}`)}
+        >
+          {run.KP_rng}
+        </div>
+      </a>
+    {/each}
+  </aside>
 
-<main>
-  
-</main>
-
-<slot />
+  <main class="flex-1 px-4 py-2">
+    <slot />
+  </main>
+</div>
