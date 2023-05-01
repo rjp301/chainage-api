@@ -5,7 +5,6 @@ from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 
 api = APIRouter(prefix="/api")
-# api.include_router(user.router)
 api.include_router(centerline.router)
 api.include_router(topcon.router)
 
