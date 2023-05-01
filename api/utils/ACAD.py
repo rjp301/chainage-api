@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from typing import List
 
 from .quadtree import *
-from centerline import format_KP
 
 @dataclass
 class Point:
