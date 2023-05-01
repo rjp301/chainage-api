@@ -37,15 +37,14 @@ async def run_topcon(
     )
 
     return await prisma.topconrun.create(
-        data={**topcon.__dict__(), "user_id": request.state.user.id},
+        data=topcon.__dict__(),
         include={"data_pts": True, "data_rng": True},
     )
 
 
 @router.get("/")
 async def all_topcon_runs(request: Request):
-    user = request.state.user
-    return await prisma.topconrun.find_many(where={"user_id": user.id})
+    return await prisma.topconrun.find_many()
 
 
 @router.get("/{run_id}")

@@ -1,6 +1,5 @@
-from fastapi import APIRouter, UploadFile, File, Form, Depends, HTTPException
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 from ..utils.prisma import prisma
-from pydantic import BaseModel
 from typing import Annotated
 
 import geopandas as gpd
@@ -13,13 +12,11 @@ async def all_centerlines():
   return await prisma.centerline.find_many()
 
 @router.get("/{centerline_id}")
-async def get_centerline(centerline_id:int,user=1):
+async def get_centerline(centerline_id:int):
   result = await prisma.centerline.find_unique(
     where={"id":centerline_id},
     include={"markers": True}
   )
-  if result.user_id != user.id:
-    raise HTTPException(status_code=401,detail="Not authorized to access item") 
   return result
 
 @router.post("/")
@@ -47,7 +44,6 @@ async def create_centerline(
 
   return await prisma.centerline.create(
     data={
-      "user_id": 1,
       "name": name,
       "description": description,
       "line": line,

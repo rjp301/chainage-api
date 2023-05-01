@@ -19,9 +19,6 @@ model User {
   full_name String @default("")
   company   String @default("")
 
-  centerlines Centerline[]
-  topcon_runs TopconRun[]
-
   @@map("users")
 }
 
@@ -33,9 +30,7 @@ model Centerline {
   description String             @default("")
   line        String
   crs         String             @default("ESPG:4326")
-  user_id     Int
   markers     CenterlineMarker[]
-  User        User               @relation(fields: [user_id], references: [id], onDelete: Cascade)
   topcon_runs TopconRun[]
 
   @@map("centerlines")
@@ -67,13 +62,12 @@ model TopconRun {
   KP_beg        Float
   KP_end        Float
   KP_rng        String
-  user_id       Int
-  centerline_id Int
 
-  data_pts   TopconDataPts[]
-  data_rng   TopconDataRng[]
-  Centerline Centerline      @relation(fields: [centerline_id], references: [id], onDelete: Cascade)
-  User       User            @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  data_pts TopconDataPts[]
+  data_rng TopconDataRng[]
+
+  centerline_id Int
+  Centerline    Centerline @relation(fields: [centerline_id], references: [id], onDelete: Cascade)
 
   @@map("topcon_runs")
 }
