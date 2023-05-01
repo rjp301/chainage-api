@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request, HTTPException
+from fastapi import APIRouter, Request, HTTPException, Response
 from ..utils.prisma import prisma
 
 router = APIRouter(prefix="/user")
@@ -12,5 +12,5 @@ async def get_centerline(request: Request, user_id: int):
 
 
 @router.post("/")
-async def creaste_user():
-    return await prisma.user.create()
+async def create_user(response: Response, full_name="", email=""):
+    return await prisma.user.create(data={"full_name": full_name, "email": email})

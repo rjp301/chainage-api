@@ -1,5 +1,5 @@
 from api.utils.prisma import prisma
-from api.routes import topcon, centerline
+from api.routes import topcon, centerline, user
 
 from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from api.middleware.authenticate_api_key import AuthenticateApiKey
 
 api = APIRouter(prefix="/api")
+api.include_router(user.router)
 api.include_router(centerline.router)
 api.include_router(topcon.router)
 

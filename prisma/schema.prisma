@@ -10,17 +10,17 @@ datasource db {
 }
 
 model User {
-  id              Int          @id @default(autoincrement())
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  api_key String  @default(uuid()) @unique
-  email           String       @unique @default("")
-  full_name       String       @default("")
-  company         String       @default("")
+  api_key   String @unique @default(uuid())
+  email     String @default("")
+  full_name String @default("")
+  company   String @default("")
 
-  centerlines     Centerline[]
-  topcon_runs     TopconRun[]
+  centerlines Centerline[]
+  topcon_runs TopconRun[]
 
   @@map("users")
 }
@@ -55,39 +55,39 @@ model CenterlineMarker {
 }
 
 model TopconRun {
-  id            Int             @id @default(autoincrement())
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   width_bot     Float
   slope         Float
-  ditch_profile String          @default("")
+  ditch_profile String @default("")
   total_volume  Float
-  data_crs      String          @default("EPSG:4326")
+  data_crs      String @default("EPSG:4326")
   KP_beg        Float
   KP_end        Float
   KP_rng        String
   userId        Int
   centerlineId  Int
 
-  data_pts      TopconDataPts[]
-  data_rng      TopconDataRng[]
-  Centerline    Centerline      @relation(fields: [centerlineId], references: [id], onDelete: Cascade)
-  User          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  data_pts   TopconDataPts[]
+  data_rng   TopconDataRng[]
+  Centerline Centerline      @relation(fields: [centerlineId], references: [id], onDelete: Cascade)
+  User       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("topcon_runs")
 }
 
 model TopconDataPts {
-  id        Int       @id @default(autoincrement())
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   num       Float
   y         Float
   x         Float
   z         Float
-  desc      String    @default("")
+  desc      String @default("")
   geometry  String
   chainage  Float?
   depth     Float?
@@ -103,17 +103,17 @@ model TopconDataPts {
 }
 
 model TopconDataRng {
-  id        Int       @id @default(autoincrement())
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  KP_beg    Float
-  KP_end    Float
-  area_beg  Float
-  area_end  Float
-  area_avg  Float
-  length    Float
-  volume    Float
+  KP_beg   Float
+  KP_end   Float
+  area_beg Float
+  area_end Float
+  area_avg Float
+  length   Float
+  volume   Float
 
   runId     Int
   TopconRun TopconRun @relation(fields: [runId], references: [id], onDelete: Cascade)
