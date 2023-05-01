@@ -3,7 +3,6 @@ from api.routes import topcon, centerline
 
 from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.middleware import Middleware
 
 from api.middleware.authenticate_api_key import AuthenticateApiKey
 
@@ -13,7 +12,7 @@ api.include_router(topcon.router)
 
 
 app = FastAPI(
-    debug=True,
+    # debug=True,
     title="Pipeline Applets",
     description="Collection of functions and data, useful for constructing pipelines",
 )
