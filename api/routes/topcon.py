@@ -98,18 +98,17 @@ async def download_run(run_id: int, temp_file=Depends(get_temp_dir)):
     ]
     rng_rename = {i: i.upper() for i in rng_cols}
 
-    excel_pts = pd.DataFrame.from_records([i.__dict__ for i in run.data_pts])[
-        pts_cols
-    ].rename(pts_rename, axis=1)
-    excel_rng = pd.DataFrame.from_records([i.__dict__ for i in run.data_rng])[
-        rng_cols
-    ].rename(rng_rename, axis=1)
+    pts_dict = [i.__dict__ for i in run.data_pts]
+    pts_excel = pd.DataFrame.from_records(pts_dict)[pts_cols].rename(pts_rename, axis=1)
+
+    rng_dict = [i.__dict__ for i in run.data_rng]
+    rng_excel = pd.DataFrame.from_records(rng_dict)[rng_cols].rename(rng_rename, axis=1)
 
     filename = f"Ditch Volume - {run.KP_rng}.xlsx"
 
     with pd.ExcelWriter(temp_file) as writer:
-        excel_pts.to_excel(writer, sheet_name="point_data", index=False)
-        excel_rng.to_excel(writer, sheet_name="range_data", index=False)
+        pts_excel.to_excel(writer, sheet_name="point_data", index=False)
+        rng_excel.to_excel(writer, sheet_name="range_data", index=False)
 
     return FileResponse(
         temp_file,
