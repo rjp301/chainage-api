@@ -17,7 +17,6 @@ class Topcon:
   file_ditch: UploadFile
   file_ground: UploadFile
   CL: Centerline
-  user_id: int
 
   def __post_init__(self):
     self.rover_import()
@@ -87,7 +86,7 @@ class Topcon:
     print(self.data_rng,"\n")
 
 
-  def save(self) -> dict:
+  def __dict__(self) -> dict:
     return {
       "width_bot": self.width_bot,
       "slope": self.slope,
@@ -98,7 +97,6 @@ class Topcon:
       "KP_beg": self.KP_min,
       "KP_end": self.KP_max,
       "KP_rng": self.KP_rng,
-      "centerlineId": self.CL.id,
+      "centerline_id": self.CL.id,
       "data_crs": self.CL.crs,
-      "userId": self.user_id,
     }

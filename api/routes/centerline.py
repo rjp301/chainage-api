@@ -18,7 +18,7 @@ async def get_centerline(centerline_id:int,user=1):
     where={"id":centerline_id},
     include={"markers": True}
   )
-  if result.userId != user.id:
+  if result.user_id != user.id:
     raise HTTPException(status_code=401,detail="Not authorized to access item") 
   return result
 
@@ -47,7 +47,7 @@ async def create_centerline(
 
   return await prisma.centerline.create(
     data={
-      "userId": 1,
+      "user_id": 1,
       "name": name,
       "description": description,
       "line": line,

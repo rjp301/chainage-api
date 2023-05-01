@@ -6,7 +6,10 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from api.utils.prisma import prisma
 
 unprotected_routes = set([("POST", "/api/user/")])
-print(unprotected_routes)
+
+
+async def get_user_from_api_key(api_key: str):
+    return await prisma.user.find_unique(where={"api_key": api_key})
 
 
 class AuthenticateApiKey(BaseHTTPMiddleware):
@@ -14,7 +17,7 @@ class AuthenticateApiKey(BaseHTTPMiddleware):
         url = request.url.path
         method = request.method
         if (method, url) in unprotected_routes:
-            print("included")
+            print("unprotected route")
             return await call_next(request)
 
         api_key = request.headers.get("X-API-Key")
@@ -24,9 +27,9 @@ class AuthenticateApiKey(BaseHTTPMiddleware):
                 content={"msg": "Must include API Key in X-API-Key header"},
             )
 
-        user = await prisma.user.find_unique(where={"api_key": api_key})
-        if user == None:
-            return JSONResponse(status_code=403, content={"msg": "Invalid API Key"})
+        user = await get_user_from_api_key(api_key)
+        if user is None:
+            return JSONResponse(status_code=401, content={"msg": "Invalid API Key"})
 
         response = await call_next(request)
         response.state.user = user

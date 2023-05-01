@@ -33,23 +33,23 @@ model Centerline {
   description String             @default("")
   line        String
   crs         String             @default("ESPG:4326")
-  userId      Int
+  user_id     Int
   markers     CenterlineMarker[]
-  User        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  User        User               @relation(fields: [user_id], references: [id], onDelete: Cascade)
   topcon_runs TopconRun[]
 
   @@map("centerlines")
 }
 
 model CenterlineMarker {
-  id           Int        @id @default(autoincrement())
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-  value        Float
-  x            Float
-  y            Float
-  centerlineId Int
-  Centerline   Centerline @relation(fields: [centerlineId], references: [id], onDelete: Cascade)
+  id            Int        @id @default(autoincrement())
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  value         Float
+  x             Float
+  y             Float
+  centerline_id Int
+  Centerline    Centerline @relation(fields: [centerline_id], references: [id], onDelete: Cascade)
 
   @@map("centerline_markers")
 }
@@ -67,13 +67,13 @@ model TopconRun {
   KP_beg        Float
   KP_end        Float
   KP_rng        String
-  userId        Int
-  centerlineId  Int
+  user_id       Int
+  centerline_id Int
 
   data_pts   TopconDataPts[]
   data_rng   TopconDataRng[]
-  Centerline Centerline      @relation(fields: [centerlineId], references: [id], onDelete: Cascade)
-  User       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  Centerline Centerline      @relation(fields: [centerline_id], references: [id], onDelete: Cascade)
+  User       User            @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@map("topcon_runs")
 }
@@ -96,8 +96,8 @@ model TopconDataPts {
   width_top Float?
   area      Float?
 
-  runId     Int
-  TopconRun TopconRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  run_id    Int
+  TopconRun TopconRun @relation(fields: [run_id], references: [id], onDelete: Cascade)
 
   @@map("topcon_data_pts")
 }
@@ -115,8 +115,8 @@ model TopconDataRng {
   length   Float
   volume   Float
 
-  runId     Int
-  TopconRun TopconRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  run_id    Int
+  TopconRun TopconRun @relation(fields: [run_id], references: [id], onDelete: Cascade)
 
   @@map("topcon_data_rng")
 }

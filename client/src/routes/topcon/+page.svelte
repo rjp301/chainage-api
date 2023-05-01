@@ -7,7 +7,7 @@
 <form method="post" enctype="multipart/form-data" class="grid divide-y px-4">
   <h2>Perform New Ditch Calculation</h2>
   <FormInput
-    id="centerlineId"
+    id="centerline_id"
     label="Centerline"
     selectOptions={data.centerlines}
   />
