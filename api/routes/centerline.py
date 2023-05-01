@@ -3,8 +3,6 @@ from ..utils.prisma import prisma
 from pydantic import BaseModel
 from typing import Annotated
 
-from .auth import manager
-
 import geopandas as gpd
 import shapely.ops
 
@@ -15,7 +13,7 @@ async def all_centerlines():
   return await prisma.centerline.find_many()
 
 @router.get("/{centerline_id}")
-async def get_centerline(centerline_id:int,user=Depends(manager)):
+async def get_centerline(centerline_id:int,user=1):
   result = await prisma.centerline.find_unique(
     where={"id":centerline_id},
     include={"markers": True}
@@ -32,7 +30,6 @@ async def create_centerline(
   shp_line: UploadFile = File(...),
   shp_markers: UploadFile = File(...),
   shp_footprint: UploadFile = File(...),
-  user=Depends(manager),
 ):
   
   EPSG_4326 = "EPSG:4326"
@@ -50,7 +47,7 @@ async def create_centerline(
 
   return await prisma.centerline.create(
     data={
-      "userId": user.id,
+      "userId": 1,
       "name": name,
       "description": description,
       "line": line,
@@ -63,5 +60,5 @@ async def create_centerline(
   )
 
 @router.delete("/{centerline_id}")
-async def delete_centerline(centerline_id:int,user=Depends(manager)):
+async def delete_centerline(centerline_id:int):
   return await prisma.centerline.delete(where={"id":centerline_id})

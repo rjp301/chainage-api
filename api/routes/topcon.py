@@ -6,7 +6,6 @@ from ..models.Centerline import Centerline
 from typing import Annotated
 from tempfile import NamedTemporaryFile
 
-from .auth import manager
 import pandas as pd
 
 router = APIRouter(prefix="/topcon")
@@ -19,7 +18,7 @@ async def run_topcon(
   data_crs: Annotated[str,Form()],
   ground_csv: UploadFile = File(...),
   ditch_shp: UploadFile = File(...),
-  user = Depends(manager)
+  user = 1
 ):
   
   centerline = Centerline(await prisma
