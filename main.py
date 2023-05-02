@@ -10,7 +10,7 @@ api.include_router(topcon.router)
 
 
 app = FastAPI(
-    debug=True,
+    # debug=True,
     title="Pipeline Applets",
     description="Collection of functions and data, useful for constructing pipelines",
 )

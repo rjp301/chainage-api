@@ -7,13 +7,13 @@ from typing import Annotated
 from tempfile import NamedTemporaryFile
 
 import pandas as pd
+from numpy import nan
 
 router = APIRouter(prefix="/topcon")
 
 
 @router.post("/")
 async def run_topcon(
-    request: Request,
     width_bot: Annotated[float, Form()],
     slope: Annotated[float, Form()],
     centerline_id: Annotated[int, Form()],
@@ -21,7 +21,7 @@ async def run_topcon(
     ground_csv: UploadFile = File(...),
     ditch_shp: UploadFile = File(...),
 ):
-    print(request)
+
     centerline = Centerline(
         await prisma.centerline.find_unique(
             where={"id": centerline_id}, include={"markers": True}
@@ -37,7 +37,27 @@ async def run_topcon(
     )
 
     return await prisma.topconrun.create(
-        data=topcon.__dict__(),
+        data={
+            "width_bot": width_bot,
+            "slope": slope,
+            "ditch_profile": topcon.ditch_profile,
+            "total_volume": topcon.total_volume,
+            "data_pts": {
+                "createMany": {
+                    "data": topcon.data_pts.replace({nan: None}).to_dict("records")
+                }
+            },
+            "data_rng": {
+                "createMany": {
+                    "data": topcon.data_rng.replace({nan: None}).to_dict("records")
+                }
+            },
+            "KP_beg": topcon.KP_min,
+            "KP_end": topcon.KP_max,
+            "KP_rng": topcon.KP_rng,
+            "centerline_id": centerline_id,
+            "data_crs": data_crs,
+        },
         include={"data_pts": True, "data_rng": True},
     )
 

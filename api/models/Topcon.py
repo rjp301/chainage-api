@@ -22,6 +22,9 @@ class Topcon:
         self.rover_import()
         self.ditch_import()
         self.volume_calc()
+
+        self.ditch_profile = str(self.ditch)
+        self.total_volume = sum(self.data_rng["volume"])
         print("calculations complete")
 
     def rover_import(self):
@@ -95,18 +98,3 @@ class Topcon:
         self.data_rng["volume"] = self.data_rng["length"] * self.data_rng["area_avg"]
 
         print(self.data_rng, "\n")
-
-    def __dict__(self) -> dict:
-        return {
-            "width_bot": self.width_bot,
-            "slope": self.slope,
-            "ditch_profile": str(self.ditch),
-            "total_volume": sum(self.data_rng["volume"]),
-            "data_pts": {"createMany": {"data": self.data_pts.to_dict("records")}},
-            "data_rng": {"createMany": {"data": self.data_rng.to_dict("records")}},
-            "KP_beg": self.KP_min,
-            "KP_end": self.KP_max,
-            "KP_rng": self.KP_rng,
-            "centerline_id": self.CL.id,
-            "data_crs": self.CL.crs,
-        }
