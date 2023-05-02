@@ -1,6 +1,6 @@
 from tempfile import NamedTemporaryFile
 from fastapi.responses import FileResponse
-from fastapi import Depends, APIRouter
+from fastapi import Depends, APIRouter, Request
 
 from typing import List, Dict, Optional
 from pydantic import BaseModel
@@ -28,8 +28,8 @@ class XlsxData(BaseModel):
     sheets: List[Sheet]
 
 
-@router.get("/xlsx")
-async def download_run(data: XlsxData, temp_file=Depends(get_temp_dir)):
+@router.post("/xlsx")
+async def convert_xlsx(data: XlsxData, temp_file=Depends(get_temp_dir)):
     filename = data.filename
     filename = filename if filename.endswith(".xlsx") else filename + ".xlsx"
 
