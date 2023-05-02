@@ -1,5 +1,4 @@
-from api.utils.prisma import prisma
-from api.routes import topcon, centerline, user
+from api.routes import topcon, centerline, convert
 
 from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
@@ -7,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 api = APIRouter(prefix="/api")
 api.include_router(centerline.router)
 api.include_router(topcon.router)
+api.include_router(convert.router)
 
 
 app = FastAPI(
@@ -22,16 +22,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-@app.on_event("startup")
-async def startup():
-    await prisma.connect()
-
-
-@app.on_event("shutdown")
-async def shutdown():
-    await prisma.disconnect()
 
 
 @app.get("/")

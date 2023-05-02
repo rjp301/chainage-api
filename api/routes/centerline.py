@@ -1,5 +1,4 @@
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
-from ..utils.prisma import prisma
 from typing import Annotated
 
 import geopandas as gpd
@@ -8,21 +7,8 @@ import shapely.ops
 router = APIRouter(prefix="/centerline")
 
 
-@router.get("/")
-async def all_centerlines():
-    return await prisma.centerline.find_many()
-
-
-@router.get("/{centerline_id}")
-async def get_centerline(centerline_id: int):
-    result = await prisma.centerline.find_unique(
-        where={"id": centerline_id}, include={"markers": True}
-    )
-    return result
-
-
 @router.post("/")
-async def create_centerline(
+async def process_centerline(
     name: Annotated[str, Form()],
     description: Annotated[str, Form()],
     marker_value_col: Annotated[str, Form()],
@@ -48,18 +34,10 @@ async def create_centerline(
         for _, row in df_markers.iterrows()
     ]
 
-    return await prisma.centerline.create(
-        data={
-            "name": name,
-            "description": description,
-            "line": line,
-            "crs": EPSG_4326,
-            "markers": {"createMany": {"data": markers}},
-        },
-        include={"markers": True},
-    )
-
-
-@router.delete("/{centerline_id}")
-async def delete_centerline(centerline_id: int):
-    return await prisma.centerline.delete(where={"id": centerline_id})
+    return {
+        "markers": markers,
+        "name": name,
+        "description": description,
+        "line": line,
+        "crs": EPSG_4326,
+    }
