@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, File, Form
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 
 from ..models.Centerline import Centerline, format_KP
 from ..utils.ACAD import Point, Polyline
@@ -15,8 +15,12 @@ router = APIRouter(prefix="/topcon")
 
 
 def rover_import(file_ground: UploadFile, CL: Centerline, data_crs: str):
-    columns = ["num", "y", "x", "z", "desc"]
     data = pd.read_csv(file_ground.file, header=None)
+    columns = (
+        ["num", "y", "x", "z", "desc"]
+        if data.at[0, 1] > data.at[0, 2]
+        else ["num", "x", "y", "z", "desc"]
+    )
     data.columns = columns
     data["geom_ACAD"] = [
         Point(row["x"], row["y"], row["z"]) for _, row in data.iterrows()
@@ -69,9 +73,14 @@ async def run_topcon(
             width_bot * depth + (width_top - width_bot) / 2 * depth
         )
 
+    if "depth" not in data_pts.columns:
+        raise HTTPException(
+            status_code=500, detail="Could not get the depth of any points"
+        )
+
     data_pts["geometry"] = [i.wkt for i in data_pts["geometry"]]
     data_pts = data_pts.drop("geom_ACAD", axis=1)
-    print(data_pts, "\n")
+    # print(data_pts, "\n")
 
     # Filter points for those that have a depth
     data_pts_copy = data_pts.copy().dropna().reset_index(drop=True)
@@ -93,7 +102,7 @@ async def run_topcon(
     data_rng["length"] = data_rng["KP_end"] - data_rng["KP_beg"]
     data_rng["volume"] = data_rng["length"] * data_rng["area_avg"]
 
-    print(data_rng, "\n")
+    # print(data_rng, "\n")
 
     return {
         "width_bot": width_bot,

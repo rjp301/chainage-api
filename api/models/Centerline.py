@@ -11,6 +11,7 @@ import json
 
 from shapely.geometry import LineString, Point
 
+
 def round_up(num, divisor):
     return num + divisor - (num % divisor)
 
@@ -34,12 +35,13 @@ def format_KP(number, comma=False) -> str:
 
 class Centerline:
     def __init__(self, dictionary: dict | str) -> None:
-        if type(dictionary) == str: dictionary = json.loads(dictionary)
+        if type(dictionary) == str:
+            dictionary = json.loads(dictionary)
 
         self.id = dictionary.get("id")
         self.name = dictionary.get("name")
         self.description = dictionary.get("description")
-        
+
         self.crs: str = dictionary.get("crs")
         self.line: LineString = shapely.wkt.loads(dictionary.get("line"))
 
@@ -90,23 +92,26 @@ class Centerline:
         return distance if line_offset.intersects(self.line) else -distance
 
     def find_KP(self, node: Point) -> float:
-        node_mvd = self.move_to_ln(node)
-        nearest = self.markers.sindex.nearest(geometry=node)[1]
-        nearest = self.markers.iloc[nearest]
+        try:
+            node_mvd = self.move_to_ln(node)
+            nearest = self.markers.sindex.nearest(geometry=node)[1]
+            nearest = self.markers.iloc[nearest]
 
-        k1 = nearest.iloc[0]["value"]
-        p1 = self.line.project(nearest.iloc[0].geometry)
-        p = self.line.project(node_mvd)
+            k1 = nearest.iloc[0]["value"]
+            p1 = self.line.project(nearest.iloc[0].geometry)
+            p = self.line.project(node_mvd)
 
-        nearest_i = nearest.index[0]
-        next_kp_i = nearest_i + 1 if p > p1 else nearest_i - 1
-        next_kp = self.markers.iloc[next_kp_i]
+            nearest_i = nearest.index[0]
+            next_kp_i = nearest_i + 1 if p > p1 else nearest_i - 1
+            next_kp = self.markers.iloc[next_kp_i]
 
-        k2 = next_kp["value"]
-        p2 = self.line.project(next_kp.geometry)
+            k2 = next_kp["value"]
+            p2 = self.line.project(next_kp.geometry)
 
-        k = k1 + (p - p1) * (k2 - k1) / (p2 - p1)
-        return k
+            k = k1 + (p - p1) * (k2 - k1) / (p2 - p1)
+            return k
+        except:
+            return None
 
     def from_KP(self, KP: float) -> Point | None:
         # assert KP <= self.KP_max, f"{format_KP(KP)} is greater than max of {format_KP(self.KP_max)}"

@@ -9,12 +9,9 @@ router = APIRouter(prefix="/centerline")
 
 @router.post("/")
 async def process_centerline(
-    name: Annotated[str, Form()],
-    description: Annotated[str, Form()],
     marker_value_col: Annotated[str, Form()],
     shp_line: UploadFile = File(...),
     shp_markers: UploadFile = File(...),
-    shp_footprint: UploadFile = File(...),
 ):
     EPSG_4326 = "EPSG:4326"
 
@@ -36,8 +33,6 @@ async def process_centerline(
 
     return {
         "markers": markers,
-        "name": name,
-        "description": description,
         "line": line,
         "crs": EPSG_4326,
     }
