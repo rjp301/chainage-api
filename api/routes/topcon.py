@@ -105,8 +105,6 @@ async def run_topcon(
     # print(data_rng, "\n")
 
     return {
-        "width_bot": width_bot,
-        "slope": slope,
         "ditch_profile": str(ditch),
         "total_volume": sum(data_rng["volume"]),
         "data_pts": data_pts.replace({nan: None}).to_dict("records"),
@@ -114,6 +112,4 @@ async def run_topcon(
         "KP_beg": KP_min,
         "KP_end": KP_max,
         "KP_rng": KP_rng,
-        "centerline_id": CL.id,
-        "data_crs": data_crs,
     }
